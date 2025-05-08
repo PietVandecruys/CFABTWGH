@@ -1,97 +1,138 @@
-import LoginButton from "@/components/LoginLogoutButton";
-import UserGreetText from "@/components/UserGreetText";
+// app/page.tsx
+import { createClientQuestions } from "@/utils/supabase/client";
+import Layout from "@/components/Layout";
 import Image from "next/image";
 
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <UserGreetText />
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <LoginButton />
-        </div>
-      </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+// Helper to format module names for URLs
+function slugify(name: string) {
+  return name.toLowerCase().replace(/\s+/g, "-");
 }
+
+// Hardcoded image URL mapping based on module names
+const getModuleImage = (moduleName: string) => {
+  if (moduleName === "Statistics") return "/images/statistics.jpg";
+  if (moduleName === "Probability Concepts") return "/images/probability.jpg";
+  if (moduleName === "Portfolio Management") return "/images/pm.jpg";
+  return "/images/default.jpg"; // Fallback image if no match
+};
+
+// Fetching modules directly in the page component (async)
+const fetchModules = async () => {
+  const supabase = createClientQuestions();
+
+  // Fetch modules from Supabase (including module_name and description)
+  const { data: modules, error } = await supabase
+    .from("modules")
+    .select("module_name, module_description") // Fetch module_name and description
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching modules:", error);
+    return [];
+  }
+
+  return modules || [];
+};
+
+const HomePage = async () => {
+  // Fetch the modules directly inside the component (server-side fetching)
+  const modules = await fetchModules();
+
+  return (
+    <Layout>
+      <main className="flex min-h-screen flex-col items-center justify-between p-24">
+        {/* Hero / Intro Section */}
+        <section className="text-center py-16 bg-white">
+          <h2 className="text-5xl font-extrabold text-gray-900 mb-4">
+            Welcome to CFA Exam Prep
+          </h2>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            Prepare thoroughly for your CFA exam with our innovative, interactive platform.
+            Access up-to-date study materials, practice exams, and track your progress – all
+            in one place.
+          </p>
+          <div className="flex justify-center">
+          <Image
+            src="/images/CFA-Exam-Prep.webp"
+            alt="CFA Exam Preparation"
+            width={600}
+            height={400}
+            className="rounded-lg shadow-lg"
+            priority
+          />
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="mt-16">
+          <div className="max-w-6xl mx-auto">
+            <h3 className="text-3xl font-bold text-center mb-6 text-gray-800">
+              Why Choose Our Platform?
+            </h3>
+            <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+              Our platform is designed to help you focus on the material that matters most.
+              Practice with relevant questions, monitor your progress, and stay motivated.
+            </p>
+
+            <div className="grid gap-8 md:grid-cols-3">
+              <div className="bg-white shadow-sm rounded-lg p-6 text-center">
+                <h4 className="text-xl font-semibold text-gray-800 mb-2">Interactive Quizzes</h4>
+                <p className="text-gray-600">
+                  Engage with dynamic quizzes and flashcards that adapt to your strengths and weaknesses.
+                </p>
+              </div>
+              <div className="bg-white shadow-sm rounded-lg p-6 text-center">
+                <h4 className="text-xl font-semibold text-gray-800 mb-2">Performance Analytics</h4>
+                <p className="text-gray-600">
+                  Gain insights into your progress with clear analytics and personalized study paths.
+                </p>
+              </div>
+              <div className="bg-white shadow-sm rounded-lg p-6 text-center">
+                <h4 className="text-xl font-semibold text-gray-800 mb-2">Up-to-Date Content</h4>
+                <p className="text-gray-600">
+                  All materials are regularly updated to ensure coverage of the latest CFA curriculum.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Available Modules Section */}
+        <section className="mt-16 w-full max-w-5xl mx-auto">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+            Available Modules
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+            {modules.length > 0 ? (
+              modules.map((module, index) => (
+                <div
+                  key={index}
+                  className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center text-center"
+                >
+                  {/* Module Image */}
+                  <div className="mb-4 w-32 h-32 flex justify-center items-center overflow-hidden rounded-full border-4 border-blue-600">
+                    <Image
+                      src={getModuleImage(module.module_name)} // Use the hardcoded image URL
+                      alt={module.module_name}
+                      width={100}
+                      height={100}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+
+                  {/* Module Name */}
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">{module.module_name}</h3>
+                  <p className="text-gray-600 mb-4">{module.module_description}</p>
+                </div>
+              ))
+            ) : (
+              <p>No modules found.</p>
+            )}
+          </div>
+        </section>
+      </main>
+    </Layout>
+  );
+};
+
+export default HomePage;

@@ -6,3 +6,10 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
+
+export function createClientQuestions() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL_1!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY_1!
+  )
+}
